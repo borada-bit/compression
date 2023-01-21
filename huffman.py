@@ -1,24 +1,9 @@
-import sys
-import heapq
-from pprint import pprint
-from collections import defaultdict
+from parse_args import read_args
 
-class Node:
-    def __init__(self, symbol, freq, left=None, right=None):
-        self.symbol = symbol
-        self.freq = freq
-        self.left = left
-        self.right = right
-        self.huff = ''
 
-    def __lt__(self, other):
-        return self.freq < other.freq
-
-    def __str__(self):
-        return f"{self.symbol} {self.freq}"
-
-# Stores encoding info
-encoded_huffman = defaultdict(str)
+def main():
+    # read args 
+    input_file, bit_length, compress, decompress = read_args()
 
 def encode_table(node, code=''):
     combined_code = code + str(node.huff)
