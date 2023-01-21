@@ -3,7 +3,7 @@ from parse_args import read_args
 
 def main():
     # read args 
-    input_file, bit_length, compress, decompress = read_args()
+    input_file, bit_len, compress, decompress = read_args()
 
 def encode_table(node, code=''):
     combined_code = code + str(node.huff)
