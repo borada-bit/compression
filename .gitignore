@@ -2,3 +2,6 @@ __pycache__/
 *.txt
 output
 *.hf
+*.jpg
+*.png
+*.gz
