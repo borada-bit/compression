@@ -1,5 +1,7 @@
 from bitarray import bitarray
 from collections import defaultdict
+import pickle
+from pprint import pprint
 
 # this is 1024 bytes at a time
 CHUNK_SIZE = 1024
@@ -41,6 +43,8 @@ def get_frequencies_from_file(input_file: str, bit_len: int, log=False):
                 # get string representation
                 value = chunk.to01()
                 frequency[value] += 1
+
+            print(f"File bits: {bits}")
         
     return frequency, padded_bits
 
@@ -83,8 +87,60 @@ def write_hf_code_to_file(input_file, output_file, hf_code, bit_len):
             # bits at the end are written to the next 2 byte address starting at the start of second byte? xx1 -> 0080
             # meaning that 0 are padded automatically for us but not sure what happens when reading
             # 0 are ignored and all is good? probabbly because they dont influence the value when padded at the back
+            print(f"Encoded bits: {encoded}")
             with open(output_file, 'ab') as of:
                 encoded.tofile(of)
     pass
 
             
+def decode_file(file_name):
+    with open(f'{file_name}.hf', 'rb') as f:
+        # read header -> huffman code table
+        header = pickle.load(f)
+        pprint(header)
+        bit_len = header['bit_len']
+        if header['padded_bits']:
+            print(f"{header['padded_bits']=}")
+        
+        symbol_count = header['symbol_count']        
+        symbol_translated_count = 0
+        
+        bytes_to_read = CHUNK_SIZE
+        while bytes_to_read * 8 % bit_len != 0:
+            bytes_to_read += 1
+        assert(bytes_to_read*8 % bit_len == 0)
+
+        original_bits = bitarray()
+        
+        while True:
+            bytes = f.read(bytes_to_read)
+            if not bytes:
+                break
+
+            bits = bitarray()
+            # retrieve encoded bits
+            bits.frombytes(bytes)
+
+            print(f"Encoded bits: {bits}")
+
+            value = bitarray()
+            for bit in bits:
+                # probably not efficient
+                value.extend([bit])
+                # print(f"Currently have {value}")
+                original_value = header.get(value.to01())
+                # print(f'Received original value {original_value}')
+                if original_value and symbol_translated_count < symbol_count:
+                    symbol_translated_count += 1
+                    value.clear()
+                    original_bits.extend(original_value)
+            
+        # Only remove if this is the last chunk?
+        if header['padded_bits']:
+            # remove padded bits
+            original_bits = original_bits[:-header['padded_bits']]
+        print(f'Decompressed file chunk in bits:\n{original_bits}')
+
+        with open('output', 'wb') as of:
+            original_bits.tofile(of)
+    pass
