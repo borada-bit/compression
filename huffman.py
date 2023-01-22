@@ -1,5 +1,6 @@
 from parse_args import read_args
 from huffman_encode import huffman_encode
+from huffman_decode import huffman_decode
 
 def main():
     # read args 
